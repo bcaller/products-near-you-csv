@@ -1,22 +1,32 @@
 # -*- coding: utf-8 -*-
 
 import os
+
 from flask import Flask
+from flask import g
 from flask import send_from_directory
 
+import server
+from server.ShopData import ShopData
 from server.api import api
+from server.json_encoder import extend_json
 
 
 def create_app(settings_overrides=None):
     app = Flask(__name__)
+    app.json_encoder = extend_json(app.json_encoder)
     configure_settings(app, settings_overrides)
-
-    @app.route('/<path:path>')
-    def send(path):
-        return send_from_directory(app.config['STATIC_PATH'], path)
-
+    configure_static_files(app)
     configure_blueprints(app)
+    with app.app_context():
+        app.data = ShopData(server.api.data_path)
     return app
+
+
+def configure_static_files(app):
+    @app.route('/<path:path>')
+    def static_files(path):
+        return send_from_directory(app.config['STATIC_PATH'], path)
 
 
 def configure_settings(app, settings_override):

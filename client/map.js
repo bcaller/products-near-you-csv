@@ -157,7 +157,19 @@
     this.prefs = prefs;
 
     this.search = function(cb) {
-      // TODO: Implement this.
+      var url = ['/search', this.prefs.position.lat, this.prefs.position.lng, this.prefs.radius, this.prefs.count].join('/')
+      if(this.prefs.tags.length)
+        url += '?tags=' + this.prefs.tags.join(',')
+      console.log(url)
+      $.getJSON(url).done(function (data) {
+        if('products' in data) {
+          console.log(data)
+          return cb(null, data.products)
+        }
+        return cb("No products key")
+      }).fail(function(jqxhr, textStatus, error) {
+        return cb(error)
+      })
     };
   };
 
