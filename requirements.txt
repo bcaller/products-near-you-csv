@@ -7,3 +7,4 @@ py==1.4.27
 pytest==3.0.3
 wsgiref==0.1.2
 pandas==0.19.0
+haversine==0.4.5

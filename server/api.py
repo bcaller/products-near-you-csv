@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 from itertools import islice
+from string import lower
 
 from flask import Blueprint, current_app, jsonify
 from flask import request
+from haversine import haversine
 from werkzeug.exceptions import BadRequest
-
-from server.geo import query_box, in_query_box, LatLng
 
 api = Blueprint('api', __name__)
 
@@ -19,16 +19,17 @@ def data_path(filename):
 def search(lat, lng, radius_metres, n_products):
     if lat > 90 or lat < -90 or lng > 180 or lng < -180:
         raise BadRequest("Bad lat/lng")
-    position = LatLng(lat, lng)
 
-    tags = {s for s in (t.strip() for t in request.args['tags'].split(',')) if len(s)} if \
+    tags = {s for s in (t.strip() for t in lower(request.args['tags']).split(',')) if len(s)} if \
         'tags' in request.args else set()  # Split comma separated tag string
 
-    area_plus_minus = query_box(position, radius_metres)
-
     data = current_app.data
+
+    # We can speed this up by making a bounding rectangle of min / max latlng and then using haversine just to see
+    # if point is within circle
     nearby_shops = {shop for shop in data.shops.values() if
-                    in_query_box(area_plus_minus, position, shop)}
+                    haversine((lat, lng), (shop.lat, shop.lng)) * 1000. < radius_metres
+                    and (not tags or not tags.isdisjoint(shop.tags))}
 
     products = islice((p for p in data.products if p.shop in nearby_shops), n_products)
 

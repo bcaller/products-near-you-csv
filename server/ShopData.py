@@ -6,6 +6,7 @@ class ShopData:
     def __init__(self, data_path_f):
         print("Loading data")
         self.shops = self._get_shops(data_path_f('shops.csv'))
+        self._get_tags(data_path_f('tags.csv'), data_path_f('taggings.csv'))
         self.products = sorted(self._get_products(data_path_f('products.csv')), key=attrgetter('popularity'),
                                reverse=True)
 
@@ -21,20 +22,43 @@ class ShopData:
             assert next(reader) == ['id', 'shop_id', 'title', 'popularity', 'quantity']
             return [p for p in self._generate_products(reader, self.shops)]
 
-    def _generate_shops(self, csv_reader):
+    def _get_tags(self, tags_file, taggings_file):
+        tags_dict = None
+        with open(tags_file, 'r') as csv_file:
+            reader = csv.reader(csv_file, delimiter=',', quotechar='"')
+            assert next(reader) == ['id', 'tag']
+            tags_dict = {_id: tag for _id, tag in reader}
+
+        with open(taggings_file, 'r') as csv_file:
+            reader = csv.reader(csv_file, delimiter=',', quotechar='"')
+            assert next(reader) == ['id', 'shop_id', 'tag_id']
+            for _, shop_id, tag_id in reader:
+                self.shops[shop_id].add_tag(tags_dict[tag_id])
+
+    @staticmethod
+    def _generate_shops(csv_reader):
         for row in csv_reader:
             yield row[0], Shop(*row[1:])
 
-    def _generate_products(self, csv_reader, shops):
+    @staticmethod
+    def _generate_products(csv_reader, shops):
         for row in csv_reader:
             yield Product(shops, *row)
 
 
 class Shop(object):
-    __slots__ = 'name', 'lat', 'lng'
+    __slots__ = 'name', 'lat', 'lng', '_tags'
 
     def __init__(self, name, lat, lng):
         self.name, self.lat, self.lng = name, float(lat), float(lng)
+        self._tags = set()
+
+    @property
+    def tags(self):
+        return self._tags
+
+    def add_tag(self, t):
+        self._tags.add(t)
 
 
 class Product(object):
