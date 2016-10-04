@@ -1,4 +1,5 @@
 from flask.json import JSONEncoder
+from werkzeug.routing import FloatConverter
 
 
 def extend_json(cls):
@@ -21,3 +22,10 @@ def extend_json(cls):
             return self.default(o) if hasattr(o, '__slots__') else o
 
     return DataSlotsEncoder
+
+
+class EnhancedFloatConverter(FloatConverter):
+    """
+    Include ints and negative numbers
+    """
+    regex = r'-?\d+(\.\d+)?'

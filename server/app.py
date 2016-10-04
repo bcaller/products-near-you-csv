@@ -9,7 +9,8 @@ from flask import send_from_directory
 import server
 from server.ShopData import ShopData
 from server.api import api
-from server.json_encoder import extend_json
+
+from server.flask_extensions import EnhancedFloatConverter, extend_json
 
 
 def create_app(settings_overrides=None):
@@ -17,6 +18,7 @@ def create_app(settings_overrides=None):
     app.json_encoder = extend_json(app.json_encoder)
     configure_settings(app, settings_overrides)
     configure_static_files(app)
+    app.url_map.converters['float'] = EnhancedFloatConverter
     configure_blueprints(app)
     with app.app_context():
         app.data = ShopData(server.api.data_path)
