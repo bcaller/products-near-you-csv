@@ -157,18 +157,21 @@
     this.prefs = prefs;
 
     this.search = function(cb) {
-      var url = ['/search', this.prefs.position.lat, this.prefs.position.lng, this.prefs.radius, this.prefs.count].join('/')
+      var url = ['/search',
+        this.prefs.position.lat,
+        this.prefs.position.lng,
+        this.prefs.radius,
+        this.prefs.count
+      ].join('/');
       if(this.prefs.tags.length)
-        url += '?tags=' + this.prefs.tags.join(',')
-      console.log(url)
+        url += '?tags=' + this.prefs.tags.join(',');
       $.getJSON(url).done(function (data) {
         if('products' in data) {
-          console.log(data)
-          return cb(null, data.products)
+          return cb(null, data.products);
         }
-        return cb("No products key")
+        return cb(new Error("No products key in returned JSON"));
       }).fail(function(jqxhr, textStatus, error) {
-        return cb(error)
+        return cb(error || textStatus || "JSON request failed");
       })
     };
   };

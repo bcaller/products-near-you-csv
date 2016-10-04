@@ -36,7 +36,7 @@ class TestSearch(object):
         assert 'products' in data
         assert len(data['products']) == 0
 
-    def test_massive_radius(self, get):
+    def test_radius(self, get):
         # 100km away
         off_coast = (58.955674359706016, 19.6051025390625)
         url = '/search/{0}/{1}/100000/1'.format(*off_coast)
@@ -57,6 +57,7 @@ class TestSearch(object):
         assert 'products' in data
         assert len(data['products']) == n_results
         for p in data['products']:
+            # Check schema
             assert set(p.keys()) == {'id', 'popularity', 'quantity', 'shop', 'title'}
             assert set(p['shop'].keys()) == {'name', 'lat', 'lng'}
             assert isinstance(p['shop']['lat'], float)
@@ -64,6 +65,16 @@ class TestSearch(object):
             assert isinstance(p['popularity'], float)
             assert isinstance(p['quantity'], int)
             assert isinstance(p['title'], unicode)
+
+    def test_sorted(self, get, stockholm):
+        url = '/search/{0}/{1}/100/20'.format(*stockholm)
+        data = get(url).json
+        assert 'products' in data
+        old_popularity = data['products'][0]['popularity']
+        assert old_popularity == 1
+        for p in data['products']:
+            assert p['popularity'] <= old_popularity
+            old_popularity = p['popularity']
 
     def test_bad_tags(self, get, stockholm, bad_tag):
         url = '/search/{1}/{2}/100/10?tags={0}'.format(bad_tag, *stockholm)

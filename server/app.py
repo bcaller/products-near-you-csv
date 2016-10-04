@@ -26,8 +26,9 @@ def create_app(settings_overrides=None):
 
 
 def configure_static_files(app):
+    @app.route('/')
     @app.route('/<path:path>')
-    def static_files(path):
+    def static_files(path='index.html'):
         return send_from_directory(app.config['STATIC_PATH'], path)
 
 
