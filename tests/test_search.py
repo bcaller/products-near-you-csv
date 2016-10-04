@@ -36,6 +36,17 @@ class TestSearch(object):
         assert 'products' in data
         assert len(data['products']) == 0
 
+    def test_massive_radius(self, get):
+        # 100km away
+        off_coast = (58.955674359706016, 19.6051025390625)
+        url = '/search/{0}/{1}/100000/1'.format(*off_coast)
+        data = get(url).json
+        assert len(data['products']) == 1
+        # 10km away
+        url = '/search/{0}/{1}/10000/1'.format(*off_coast)
+        data = get(url).json
+        assert len(data['products']) == 0
+
     def test_out_of_bounds(self, get, invalid_lat_lng):
         url = '/search/{0}/{1}/10/1'.format(*invalid_lat_lng)
         assert get(url).status_code == 400
@@ -48,6 +59,8 @@ class TestSearch(object):
         for p in data['products']:
             assert set(p.keys()) == {'id', 'popularity', 'quantity', 'shop', 'title'}
             assert set(p['shop'].keys()) == {'name', 'lat', 'lng'}
+            assert isinstance(p['shop']['lat'], float)
+            assert isinstance(p['shop']['lng'], float)
             assert isinstance(p['popularity'], float)
             assert isinstance(p['quantity'], int)
             assert isinstance(p['title'], unicode)

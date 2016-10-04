@@ -7,7 +7,7 @@ from flask import g
 from flask import send_from_directory
 
 import server
-from server.ShopData import ShopData
+from server.shop_data import ShopData
 from server.api import api
 
 from server.flask_extensions import EnhancedFloatConverter, extend_json

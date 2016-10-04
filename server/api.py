@@ -8,6 +8,8 @@ from flask import request
 from haversine import haversine
 from werkzeug.exceptions import BadRequest
 
+from server.geo import query_bounds_tester
+
 api = Blueprint('api', __name__)
 
 
@@ -24,12 +26,16 @@ def search(lat, lng, radius_metres, n_products):
         'tags' in request.args else set()  # Split comma separated tag string
 
     data = current_app.data
+    radius_km = float(radius_metres) / 1000.
 
-    # We can speed this up by making a bounding rectangle of min / max latlng and then using haversine just to see
-    # if point is within circle
+    # We can speed search up by pre-computing a bounding rectangle of min / max latlng and then using haversine just
+    # to see if point is within circle
+    is_in_rectangular_bounds = query_bounds_tester(lat, lng, radius_km)
+
     nearby_shops = {shop for shop in data.shops.values() if
-                    haversine((lat, lng), (shop.lat, shop.lng)) * 1000. < radius_metres
-                    and (not tags or not tags.isdisjoint(shop.tags))}
+                    is_in_rectangular_bounds(shop.lat, shop.lng) and
+                    haversine((lat, lng), (shop.lat, shop.lng)) < radius_km
+                    and not (tags and tags.isdisjoint(shop.tags))}
 
     products = islice((p for p in data.products if p.shop in nearby_shops), n_products)
 

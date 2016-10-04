@@ -3,12 +3,16 @@ from operator import attrgetter
 
 
 class ShopData:
-    def __init__(self, data_path_f):
-        print("Loading data")
-        self.shops = self._get_shops(data_path_f('shops.csv'))
-        self._get_tags(data_path_f('tags.csv'), data_path_f('taggings.csv'))
-        self.products = sorted(self._get_products(data_path_f('products.csv')), key=attrgetter('popularity'),
-                               reverse=True)
+    def __init__(self, path_getter):
+        """
+        Load shop data into memory
+        :param path_getter: A function taking a csv filename and returning a path
+        """
+        self.shops = self._get_shops(path_getter('shops.csv'))
+        self._get_tags(path_getter('tags.csv'), path_getter('taggings.csv'))
+        # Do the sorting by popularity once
+        self.products = sorted(self._get_products(path_getter('products.csv')),
+                               key=attrgetter('popularity'), reverse=True)
 
     def _get_shops(self, filename):
         with open(filename, 'r') as csv_file:
